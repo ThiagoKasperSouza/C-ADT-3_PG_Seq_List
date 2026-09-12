@@ -37,7 +37,7 @@ int main() {
     create_table(conn,sql);
 
     User u;
-    u.id = 0;
+    u.id = 10;
     strcpy(u.name, "Teste");
     u.age = 20;
     u.height = 1.75f;    
@@ -56,6 +56,26 @@ int main() {
     } else {
         printf("Nenhum usuário encontrado ou erro ao ler do banco.\n");
     }
+
+    strcpy(u.name, "Teste2");
+
+    update_user(conn, u);
+
+    l = read_list(conn);
+    if (l != NULL && l->data != NULL) {
+        for (int i = 0; i < l->qty; i++) {
+            User u2 = l->data[i];
+            printf("ID: %ld | Name: %s | Age: %d | Height: %.2f\n", u2.id, u2.name, u2.age, u2.height);
+        }
+        
+        // Lembre-se de liberar a memória da lista retornada por read_list se tiver uma função para isso!
+        // free_list(l);
+    } else {
+        printf("Nenhum usuário encontrado ou erro ao ler do banco.\n");
+    }
+
+    delete_user(conn,u);
+    printf("User deletado\n");
 
     // 4. Libera conexao com o banco padrao
     close_and_finish(conn);
