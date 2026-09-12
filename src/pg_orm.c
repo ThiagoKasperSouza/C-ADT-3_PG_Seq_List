@@ -100,39 +100,32 @@ PGresult* exec_single_read(PGconn *conn,char *cols, char *table, char *where) {
     return PQexec(conn, query);
 }
 
-PGresult* exec_update(PGconn *conn, const char *table, const char *set_clause, const char *where_clause, int n_params, const char * const *param_values) {
-    char query[256];
-
-     snprintf(query, sizeof(query), "UPDATE %s SET %s WHERE %s;", table, set_clause, where_clause);
-
-    // Executa usando parâmetros para sanitizar os dados da cláusula SET
-    return PQexecParams(
-        conn,
-        query,
-        n_params,
-        NULL,
-        param_values,
-        NULL,
-        NULL,
+PGresult* exec_update(PGconn *conn, char *sql, int n_params, const char * const *param_values) {
+    PGresult *res = PQexecParams(
+        conn, 
+        sql, 
+        n_params,             // Quantidade exata de marcadores ($1 a $4)
+        NULL, 
+        param_values,            // Array contendo os 4 valores
+        NULL, 
+        NULL, 
         0
     );
+    return res;
 }
-PGresult* exec_delete(PGconn *conn, const char *table, const char *where_clause, int n_params, const char * const *param_values) {
-    char query[256];
-
-    snprintf(query, sizeof(query), "DELETE FROM %s WHERE %s;", table, where_clause);
-
-    return PQexecParams(
-        conn,
-        query,
-        n_params,
-        NULL,
-        param_values,
-        NULL,
-        NULL,
+PGresult* exec_delete(PGconn *conn, char *sql, int n_params, const char * const *param_values) {
+    PGresult *res = PQexecParams(
+        conn, 
+        sql, 
+        n_params,             // Quantidade exata de marcadores ($1 a $4)
+        NULL, 
+        param_values,            // Array contendo os 4 valores
+        NULL, 
+        NULL, 
         0
     );
-};
+    return res;
+}
 
 void create_table(PGconn *conn, char *sql) {
 
