@@ -40,9 +40,14 @@ UserList* convert_to_list(PGresult *res) {
     return user_list;
 }
 
-// struct access_index(List *l, int index) {
-//     return l[index];
-// }
+int list_size(UserList *l ) {
+    if(l == NULL) return -1;
+    return l->qty;
+}
+int is_empty_list(UserList *l) {
+    if(l == NULL) return 1;
+    if(l->qty > 0) return 0;
+}
 
 void delete_list(UserList *l) {
     free(l->data);
@@ -87,21 +92,40 @@ UserList* read_list(PGconn *conn) {
 //     return convert_to_list(res);
 // }
 
-// void update_user(PGconn *conn, const char *where, User u) {
-//     char *cols = "id,name,age,height";
-//     char param_values[256];
-//     snprintf(param_values, sizeof(param_values), "%ld,%s,%d,%.2f",u.id, u.name, u.age, u.height);
-//     const char * const* pv = param_values;
-//     PGresult *res = exec_update(conn, "users", cols, where, 4, pv);
-//     PQclear(res);
-//     printf("Updated");
-// }
-// void delete_user(PGconn *conn, const char *where, User u) {
-//     char *cols = "id,name,age,height";
-//     char param_values[256];
-//     snprintf(param_values, sizeof(param_values), "%ld,%s,%d,%.2f",u.id, u.name, u.age, u.height);
-//     const char * const* pv = param_values;
-//     PGresult *res = exec_delete(conn, "users", cols, where, 4, pv);
-//     PQclear(res);
-//     printf("Deleted");
-// }
+void update_user(PGconn *conn, User u) {
+    char *sql = "UPDATE users SET name = $1, age = $2, height = $3 WHERE id = $4;";
+
+    char id_str[21];       // Garante espaço para longs de até 64 bits + sinal + '\0'
+    char age_str[12];      // Suficiente para inteiros
+    char height_str[16];   // Suficiente para números de ponto flutuante
+
+    // Converta usando os especificadores de formato adequados
+    snprintf(id_str, sizeof(id_str), "%ld", u.id);
+    snprintf(age_str, sizeof(age_str), "%d", u.age);
+    snprintf(height_str, sizeof(height_str), "%.2f", u.height);
+
+    // Exemplo com 4 parâmetros: name ($1), age ($2), height ($3), id ($4)
+    const char * const pv[] = { u.name, age_str, height_str, id_str };
+
+
+    
+    PGresult *res = exec_update(conn,sql, 4, pv);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        fprintf(stderr, "Erro de Execução no Banco: %s\n", PQerrorMessage(conn));
+        PQclear(res);
+    }
+}
+void delete_user(PGconn *conn, User u) {
+    
+    char *sql = "DELETE FROM users WHERE id = $1;";
+    char id_str[21];       // Garante espaço para longs de até 64 bits + sinal + '\0'
+    // Converta usando os especificadores de formato adequados
+    snprintf(id_str, sizeof(id_str), "%ld", u.id);
+
+    const char * const pv[] = { id_str };
+    PGresult *res = exec_delete(conn,sql, 1, pv);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+        fprintf(stderr, "Erro de Execução no Banco: %s\n", PQerrorMessage(conn));
+        PQclear(res);
+    }
+}
